@@ -1,0 +1,198 @@
+<!DOCTYPE html>  
+<html>
+<head>
+
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Template</title>
+<meta name="viewport" content="width=device-width, initial-scale=1"> 
+
+<link href="libs/jquery.mobile-1.0.1/jquery.mobile-1.0.1.css" rel="stylesheet" type="text/css" />
+
+<script type='text/javascript' src="libs/jquery-1.7.1.min.js"></script>
+<script type='text/javascript' src="libs/jquery.mobile-1.0.1/jquery.mobile-1.0.1.min.js"></script>
+<script type='text/javascript' src="libs/knockout-2.0.0.js"></script>
+<script type='text/javascript' src="libs/data-model.js"></script>
+</head>
+
+
+<body>
+<div data-role="page" id="page_Vehicles" data-add-back-btn="true">
+  <div data-role="header">
+    <h3>Re-Fuel: Vehicles</h3>
+    <a href="#" data-role="button" data-icon="gear"  class="ui-btn-left" data-iconpos="left" data-bind="visible: isReadMode, click: VehicleList_ToggleEditClicked">Edit</a>
+     <a href="#" data-role="button" data-icon="cancel"  class="ui-btn-left" data-iconpos="left" data-bind="visible: isEditMode, click: VehicleList_ToggleEditClicked">Done</a>
+    <a href="#" data-role="button" data-icon="cancel"  class="ui-btn-right" data-iconpos="left" data-bind="click: VehicleList_AddClicked">Add</a>
+  </div>
+  <div data-role="content">
+    
+    <ul  data-role="listview" data-bind="foreach: vehicleList">
+        <li> 
+        	<a href="#" data-icon="gear" data-bind="click: VehicleClicked, attr: { 'vehicle-id': $data.vehicleId }">
+        	<span data-bind="text: $data.vehicleTitle"></span></a>
+            <a href="#" data-role="button" data-icon="delete" data-bind="visible: $parent.isEditMode, click: Vehicle_DeleteClicked">Button</a> 
+        </li>
+    </ul>
+  </div>
+  
+<div data-role="footer" data-position="fixed" data-id="footer_Main">
+    <div data-role="navbar" data-iconpos="top">
+        <ul>
+            <li>
+                <a href="#page_Home" data-theme="" data-icon="" data-transition="none">
+                    Home
+                </a>
+            </li>
+            <li>
+                <a href="#page_Vehicles" data-theme="" data-icon="" class="ui-btn-active ui-state-persist">
+                    Vehicles
+                </a>
+            </li>
+            <li>
+                <a href="#page_PetrolStations" rel="external" data-theme="" data-icon="" data-transition="none">
+                    Petrol Stations
+                </a>
+            </li>
+            <li>
+                <a href="#page_FuelType" data-theme="" data-icon="" data-transition="none">
+                    Fuel Type
+                </a>
+            </li>
+        </ul>
+    </div>
+  </div>
+</div>  
+
+<div data-role="page" id="page_VehicleDetails">
+  <div data-role="header">
+    <h3>Vehicle Details: <span data-bind="text: vehicleTitle"></span>
+    </h3>
+    <a href="#" data-role="button" data-icon="arrow-l"  class="ui-btn-left" data-iconpos="left" data-bind="click: Vehicle_CancelClicked">Back</a>
+    <a href="#" data-role="button" data-icon="gear"  class="ui-btn-right" data-iconpos="left" data-bind="click: Vehicle_SaveClicked">Save</a>
+  </div>
+  <div data-role="content">
+     <div class="ui-grid-a" id="VehicleDetails_EditMode">
+      <div class="ui-block-a">Vehicle Id</div>
+      <div class="ui-block-b"><span data-bind="text: vehicleId"></span></div>
+      <div data-role="fieldcontain">
+        <label for="txtVehicleTitle">Vehicle Title</label>
+        <input type="text" name="txtVehicleTitle" id="txtVehicleTitle" data-bind="value: vehicleTitle"  />
+      </div>
+      <div data-role="fieldcontain">
+        <label for="txtVehicleNumber">Vehicle Number</label>
+        <input type="text" name="txtVehicleNumber" id="txtVehicleNumber" data-bind="value: vehicleNumber"  />
+      </div>
+    </div>
+  </div>
+  
+  <div data-role="footer" data-position="fixed" data-id="footer_Main">
+    <div data-role="navbar" data-iconpos="top">
+        <ul>
+            <li>
+                <a href="#page_Home" data-theme="" data-icon="" data-transition="none">
+                    Home
+                </a>
+            </li>
+            <li>
+                <a href="#page_Vehicles" data-theme="" data-icon=""   class="ui-btn-active ui-state-persist">
+                    Vehicles
+                </a>
+            </li>
+            <li>
+                <a href="#page_PetrolStations" rel="external" data-theme="" data-icon="" data-transition="none">
+                    Petrol Stations
+                </a>
+            </li>
+            <li>
+                <a href="#page_FuelType" data-theme="" data-icon="" data-transition="none">
+                    Fuel Type
+                </a>
+            </li>
+        </ul>
+    </div>
+  </div>
+</div>  
+
+ <script type="text/javascript">
+ 	//Current vehicle list model
+	var vehicleListModel = null;
+	//Currently selected vehicle on Vehicle List page	
+	var selectedVehicle = null;
+	//Edited vehicle on Vehicle Details page
+	var editedVehicle = new Vehicle();
+	
+ 
+ 	//Handle vehicle list page load:
+ 	//Load vehicles list when vehicles page is loading
+	$("#page_Vehicles").live('pageinit', function(event) {
+		vehicleListModel = new VehicleList();
+		ko.applyBindings(vehicleListModel, this);
+		vehicleListModel.loadData();
+	});
+	
+	//Handle Edit button click:
+	//Enter editor/read only mode
+	function VehicleList_ToggleEditClicked(data, args) {
+		data.isEditMode(!data.isEditMode());
+		}
+	
+	//Handle new vehicle creation:
+	//create new vehicle, add it to vehicle list, open editor window
+	function VehicleList_AddClicked(data, args) {
+		var newVehicle = new Vehicle();
+		newVehicle.vehicleTitle("New vehicle");
+		
+		selectedVehicle = newVehicle;
+		editedVehicle.copyVehicle(newVehicle);
+		
+		$.mobile.changePage( "#page_VehicleDetails", { transition: "slide"});
+		}
+		
+	//Handle vehicle delete button click:
+	//delete a vehicle, remove vehicle from vehicle list	
+	function Vehicle_DeleteClicked(vehicle, args) {
+		vehicleListModel.deleteVehicle(vehicle);
+		}
+	
+	//Handle vehicle selection:
+	//select vehicle, open editor window
+	function VehicleClicked(vehicle, args) {
+		
+		selectedVehicle = vehicle;
+		editedVehicle.copyVehicle(vehicle);
+		
+		$.mobile.changePage( "#page_VehicleDetails", { transition: "slide"});
+	}
+	
+	//Handle vehicle details page load:
+	//bind currently selected vehicle to page controls
+	$("#page_VehicleDetails").live("pageinit",  function(event, ui) {
+		ko.applyBindings(editedVehicle, this);
+	});
+	
+	//Handle vehicle save button click:
+	//save currently selected vehicle, navigate to vehicle list page
+	function Vehicle_SaveClicked(vehicle, args) {
+		selectedVehicle.copyVehicle(editedVehicle);
+		
+		if (selectedVehicle.vehicleId() == undefined)
+			vehicleListModel.addVehicle(selectedVehicle);
+			
+		selectedVehicle.saveVehicle();	
+		
+		$.mobile.changePage( "#page_Vehicles", { transition: "slide"});
+	}
+	
+	//Handle vehicle cancel button click:
+	//reload currently selected vehicle, navigate to vehicle list page
+	function Vehicle_CancelClicked(vehicle, args) {
+		if (selectedVehicle.vehicleId() == undefined) 
+			vehicleListModel.deleteVehicle(selectedVehicle);
+		else 
+			vehicle.reloadVehicle();
+		
+		$.mobile.changePage( "#page_Vehicles", { transition: "slide"});
+		}
+		
+ </script>
+</body>  
+</html>
